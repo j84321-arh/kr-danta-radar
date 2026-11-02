@@ -1,38 +1,136 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><link rel="manifest" href="manifest.webmanifest"><title>KR 단타 레이더</title><style>
-*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#edf3fb;font:15px system-ui,sans-serif}.wrap{max-width:700px;margin:auto;padding:16px}h1{font-size:22px}.panel{background:#121d2e;border:1px solid #26364d;border-radius:14px;padding:14px;margin:12px 0}.muted,.note{color:#9aabc1;font-size:12px;line-height:1.6}button{padding:12px 16px;border:0;border-radius:9px;background:#2879d7;color:white;font-weight:bold}button.stop{background:#8c3341}.status{display:flex;justify-content:space-between;font-size:12px;margin-top:10px;color:#9aabc1}.stock{padding:12px 0;border-bottom:1px solid #26364d}.price{font-size:25px;font-weight:800;margin:8px 0}.head{display:flex;justify-content:space-between}.code{color:#9aabc1;font-size:11px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.metric{background:#172438;padding:8px;border-radius:8px}.metric small{display:block;color:#9aabc1;font-size:10px}.signal{padding:9px;background:#1b2a3e;border-radius:8px;margin-top:8px;font-size:12px;color:#9aabc1}.buy{color:#8cf0c7}.warn{color:#ffda8a}.up{color:#ff6877}.down{color:#73b7ff}.log{font-size:12px;color:#9aabc1;max-height:130px;overflow:auto}.log div{padding:4px;border-bottom:1px solid #26364d}
-</style></head><body><main class="wrap"><h1>KR 단타 레이더</h1><div class="muted">삼성전자 · SK하이닉스 | 네이버 금융 조회 수정판</div>
-<section class="panel"><button id="start">감시 시작</button> <button id="stop" class="stop" disabled>감시 중지</button><div class="status"><span id="state">대기 중</span><span id="updated">최근 조회: -</span></div></section>
-<section class="panel" id="stocks">
-<div class="stock"><div class="head"><b>삼성전자 <span class="code">005930</span></b><span id="chg-005930">-</span></div><div class="price" id="price-005930">시세 대기</div><div class="metrics"><div class="metric"><small>등락률</small><b id="rate-005930">-</b></div><div class="metric"><small>최근 5회 변화</small><b id="mom-005930">-</b></div><div class="metric"><small>관측 고점</small><b id="high-005930">-</b></div></div><div class="signal" id="sig-005930">시세 대기</div></div>
-<div class="stock"><div class="head"><b>SK하이닉스 <span class="code">000660</span></b><span id="chg-000660">-</span></div><div class="price" id="price-000660">시세 대기</div><div class="metrics"><div class="metric"><small>등락률</small><b id="rate-000660">-</b></div><div class="metric"><small>최근 5회 변화</small><b id="mom-000660">-</b></div><div class="metric"><small>관측 고점</small><b id="high-000660">-</b></div></div><div class="signal" id="sig-000660">시세 대기</div></div></section>
-<section class="panel"><b>감시 로그</b><div id="log" class="log">감시 시작을 누르세요.</div><p class="note">기본 10초 조회 시도. 네이버 응답의 pollingInterval이 더 길면 해당 간격을 적용합니다.</p></section>
-<section class="panel note"><b>검증되지 않은 기능 및 제한</b><p>네이버의 비공식 API 주소를 변경했습니다. 브라우저 CORS 차단이 남아 있으면 계속 Failed to fetch가 발생할 수 있습니다. 실제 휴대폰에서 연결 성공은 아직 검증되지 않았습니다.</p><p>화면 비활성/앱 종료 시 감시가 중단됩니다. 백그라운드 푸시와 자동 주문은 없습니다. 네이버 시세의 실시간성도 보증하지 않습니다.</p></section></main>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>국내주식 단타 레이더</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#151f30;--line:#29364a;--txt:#eef4ff;--muted:#9aabc3;--green:#38d996;--red:#ff737d;--blue:#75a9ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:16px;max-width:720px;margin:auto}
+h1{font-size:22px;margin:8px 0 4px}.sub{color:var(--muted);font-size:12px;margin-bottom:16px}
+.panel,.stock{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.name{font-weight:700}.code{color:var(--muted);font-size:12px}
+.price{font-size:27px;font-weight:800;margin:8px 0}.change{font-weight:700}.up{color:var(--red)}.down{color:var(--blue)}.flat{color:var(--muted)}
+button{border:0;border-radius:10px;padding:12px 15px;font-weight:700;background:#3478ed;color:white;font-size:14px}
+button.secondary{background:#344256}button:disabled{opacity:.5}
+.controls{display:flex;gap:8px;flex-wrap:wrap}.status{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.signal{font-size:13px;padding:6px 9px;border-radius:8px;background:#253247;color:#cbd8ec}
+input{width:75px;background:#0d1726;color:white;border:1px solid var(--line);padding:8px;border-radius:8px}
+.small{font-size:11px;color:var(--muted);line-height:1.55}.warn{color:#ffd27d}.error{color:#ff9ca3}
+</style>
+</head>
+<body>
+<h1>국내주식 단타 레이더</h1>
+<div class="sub">무료 Yahoo Finance 차트 데이터 · 앱 화면을 켜둔 동안만 감시</div>
+
+<div class="panel">
+  <div class="row"><b>감시 설정</b><span class="signal" id="runState">중지됨</span></div>
+  <p class="small">조회 간격 <input id="interval" type="number" min="15" max="300" value="30"> 초 (권장 30초 이상)</p>
+  <div class="controls">
+    <button id="start">감시 시작</button>
+    <button class="secondary" id="stop" disabled>중지</button>
+    <button class="secondary" id="once">지금 조회</button>
+  </div>
+  <div class="status" id="status">감시를 시작하면 시세를 조회합니다.</div>
+</div>
+
+<div class="stock" id="samsung">
+ <div class="row"><div><div class="name">삼성전자</div><div class="code">005930.KS</div></div><span class="signal" id="sig0">대기</span></div>
+ <div class="price" id="price0">-- 원</div>
+ <div class="row"><span class="change flat" id="change0">--</span><span class="small" id="time0">시세 대기</span></div>
+</div>
+<div class="stock" id="sk">
+ <div class="row"><div><div class="name">SK하이닉스</div><div class="code">000660.KS</div></div><span class="signal" id="sig1">대기</span></div>
+ <div class="price" id="price1">-- 원</div>
+ <div class="row"><span class="change flat" id="change1">--</span><span class="small" id="time1">시세 대기</span></div>
+</div>
+
+<div class="panel">
+ <b>신호 기준</b>
+ <p class="small">현재가가 직전 조회가보다 0.3% 이상 상승하면 상승 감지, 0.3% 이상 하락하면 하락 감지로 표시합니다. 이는 단순 가격 변화 알림이며 매수·매도 추천이 아닙니다.</p>
+ <div class="small warn">주의: Yahoo Finance 비공식 데이터와 무료 CORS 중계 서비스를 사용합니다. 시세 지연·누락·차단이 있을 수 있으며 실시간/10초 갱신을 보장하지 않습니다. 실제 주문 전 증권사 시세를 확인하세요.</div>
+</div>
+
 <script>
-const codes=["005930","000660"],names={"005930":"삼성전자","000660":"SK하이닉스"},hist={"005930":[],"000660":[]};let active=false,timer=null,interval=10000,alerts={};
-const $=id=>document.getElementById(id),fmt=n=>Number(n).toLocaleString("ko-KR",{maximumFractionDigits:0});
-function log(s){let d=document.createElement("div");d.textContent=new Date().toLocaleTimeString("ko-KR")+" · "+s;$("log").prepend(d)}
-function status(s,c=""){$("state").textContent=s;$("state").className=c}
-function draw(code,q){let h=hist[code];h.push(q.p);if(h.length>80)h.shift();let cls=q.c>0?"up":q.c<0?"down":"";
-$("price-"+code).textContent=fmt(q.p)+"원";$("chg-"+code).textContent=(q.c>0?"+":"")+fmt(q.c)+"원";$("chg-"+code).className=cls;
-$("rate-"+code).textContent=Number.isFinite(q.r)?(q.r>0?"+":"")+q.r.toFixed(2)+"%":"-";
-let m=h.length>=6?(q.p/h[h.length-6]-1)*100:null;$("mom-"+code).textContent=m===null?"관측 중":(m>0?"+":"")+m.toFixed(2)+"%";
-let prev=h.slice(Math.max(0,h.length-21),-1),hi=prev.length?Math.max(...prev):q.p;$("high-"+code).textContent=fmt(hi)+"원";
-let msg="관측 데이터 축적 중 ("+h.length+"회)",kind="";
-if(prev.length>=5&&q.p>hi&&m!==null&&m>=.15){msg="관측 고점 돌파 + 상승 모멘텀 · 추격매수 주의";kind="buy";if(alerts[code]!==h.length){alerts[code]=h.length;log(names[code]+" 돌파 신호");if(navigator.vibrate)navigator.vibrate([100,60,100])}}
-else if(m!==null&&m<=-.15){msg="단기 하락 모멘텀 · 신규 진입 주의";kind="warn"}
-$("sig-"+code).textContent=msg;$("sig-"+code).className="signal "+kind}
-async function tick(){if(!active||document.visibilityState!=="visible")return;try{
-let url="https://polling.finance.naver.com/api/realtime/domestic/stock/"+codes.join(",");
-let res=await fetch(url,{mode:"cors",cache:"no-store",headers:{Accept:"application/json"}});if(!res.ok)throw Error("HTTP "+res.status);
-let j=await res.json(),a=j.datas||[];if(!a.length)throw Error("응답 datas가 비어 있음");
-for(let code of codes){let x=a.find(v=>String(v.itemCode||v.code||v.cd||"")===code);if(!x)throw Error(code+" 데이터 없음");
-let p=Number(String(x.closePrice??x.currentPrice??"").replaceAll(",","")),c=Number(String(x.compareToPreviousClosePrice??x.changePrice??0).replaceAll(",","")),r=Number(String(x.fluctuationsRatio??x.changeRate??"").replaceAll(",",""));
-if(!Number.isFinite(p)||p<=0)throw Error(code+" 현재가 형식 오류");draw(code,{p,c,r})}
-interval=Math.max(10000,Number(j.pollingInterval)||0);$("updated").textContent="최근 조회: "+new Date().toLocaleTimeString("ko-KR");status("시세 응답 성공 · 다음 조회 "+Math.round(interval/1000)+"초 후","good");
-}catch(e){status("조회 실패: "+e.message,"bad");log("조회 실패: "+e.message)}finally{if(active&&document.visibilityState==="visible")timer=setTimeout(tick,interval)}}
-function start(){if(active)return;active=true;$("start").disabled=true;$("stop").disabled=false;status("첫 시세 조회 중");log("감시 시작");tick()}
-function stop(){active=false;clearTimeout(timer);$("start").disabled=false;$("stop").disabled=true;status("감시 중지");log("감시 중지")}
-$("start").onclick=start;$("stop").onclick=stop;
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState!=="visible"&&active){clearTimeout(timer);status("화면 비활성 — 일시중지","bad")}else if(document.visibilityState==="visible"&&active)tick()});
-if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js");
-</script></body></html>
+const symbols = [
+ {symbol:"005930.KS", price:"price0", change:"change0", time:"time0", signal:"sig0"},
+ {symbol:"000660.KS", price:"price1", change:"change1", time:"time1", signal:"sig1"}
+];
+const proxy = "https://proxy.cors.dev/";
+let timer = null, previous = [null,null], busy = false;
+
+const won = n => Math.round(n).toLocaleString("ko-KR") + " 원";
+function setStatus(message, error=false) {
+ const el=document.getElementById("status"); el.textContent=message;
+ el.className="status"+(error?" error":"");
+}
+async function getQuote(symbol) {
+ const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1m`;
+ const response = await fetch(proxy + target, {method:"GET", cache:"no-store"});
+ if(!response.ok) throw new Error(`HTTP ${response.status}`);
+ const json=await response.json();
+ if(json.chart?.error) throw new Error(json.chart.error.description || "Yahoo 응답 오류");
+ const result=json.chart?.result?.[0];
+ if(!result) throw new Error("시세 데이터 없음");
+ const meta=result.meta || {};
+ const closes=result.indicators?.quote?.[0]?.close || [];
+ let last=null;
+ for(let i=closes.length-1;i>=0;i--){if(closes[i]!=null){last=closes[i];break;}}
+ const price=Number(meta.regularMarketPrice ?? last);
+ const prev=Number(meta.chartPreviousClose ?? meta.previousClose);
+ if(!Number.isFinite(price) || price<=0) throw new Error("현재가를 읽지 못했습니다");
+ return {price, prev:Number.isFinite(prev)?prev:null, marketTime:meta.regularMarketTime || null};
+}
+function paint(i,q) {
+ const s=symbols[i], old=previous[i];
+ document.getElementById(s.price).textContent=won(q.price);
+ const pct=q.prev ? (q.price-q.prev)/q.prev*100 : null;
+ const delta=q.prev ? q.price-q.prev : null;
+ const ch=document.getElementById(s.change);
+ ch.className="change "+(pct>0?"up":pct<0?"down":"flat");
+ ch.textContent=pct===null?"전일 대비 정보 없음":`${delta>0?"+":""}${Math.round(delta).toLocaleString("ko-KR")}원 (${pct>0?"+":""}${pct.toFixed(2)}%)`;
+ const sig=document.getElementById(s.signal);
+ if(old!==null){
+  const move=(q.price-old)/old*100;
+  if(move>=0.3){sig.textContent="단기 상승 감지";sig.style.color="#38d996";}
+  else if(move<=-0.3){sig.textContent="단기 하락 감지";sig.style.color="#75a9ff";}
+  else {sig.textContent="변동 제한";sig.style.color="#cbd8ec";}
+ } else {sig.textContent="기준가 설정";sig.style.color="#cbd8ec";}
+ previous[i]=q.price;
+ document.getElementById(s.time).textContent=q.marketTime?new Date(q.marketTime*1000).toLocaleTimeString("ko-KR"):"조회 "+new Date().toLocaleTimeString("ko-KR");
+}
+async function refresh(){
+ if(busy)return;
+ busy=true;
+ try{
+  const results=await Promise.all(symbols.map(s=>getQuote(s.symbol)));
+  results.forEach((q,i)=>paint(i,q));
+  setStatus("조회 성공 · "+new Date().toLocaleTimeString("ko-KR")+" · 데이터 제공: Yahoo Finance");
+ }catch(e){setStatus("시세 조회 실패: "+e.message+" · 잠시 후 다시 시도하거나 네트워크를 확인하세요.",true);}
+ finally{busy=false;}
+}
+function start(){
+ if(timer)clearInterval(timer);
+ const sec=Math.max(15,Math.min(300,Number(document.getElementById("interval").value)||30));
+ document.getElementById("interval").value=sec;
+ refresh();
+ timer=setInterval(refresh,sec*1000);
+ document.getElementById("runState").textContent="감시 중";
+ document.getElementById("start").disabled=true;document.getElementById("stop").disabled=false;
+ setStatus(`${sec}초 간격으로 감시를 시작했습니다. 화면을 켜둔 상태에서 사용하세요.`);
+}
+function stop(){
+ if(timer)clearInterval(timer);timer=null;
+ document.getElementById("runState").textContent="중지됨";
+ document.getElementById("start").disabled=false;document.getElementById("stop").disabled=true;
+ setStatus("감시가 중지되었습니다.");
+}
+document.getElementById("start").addEventListener("click",start);
+document.getElementById("stop").addEventListener("click",stop);
+document.getElementById("once").addEventListener("click",refresh);
+document.addEventListener("visibilitychange",()=>{if(document.hidden && timer){stop();setStatus("앱 화면을 벗어나 감시를 자동 중지했습니다.");}});
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+</body></html>
