@@ -1,9 +1,1 @@
-{
-  "name": "국내주식 단타 레이더",
-  "short_name": "단타 레이더",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#101827",
-  "lang": "ko"
-}
+{"name":"주식 간편 매매 레이더","short_name":"간편 레이더","start_url":"./index.html","display":"standalone","background_color":"#0b1220","theme_color":"#101827","lang":"ko"}
